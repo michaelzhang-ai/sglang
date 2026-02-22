@@ -1080,7 +1080,7 @@ jobs:
 
       - name: Download artifacts
         if: needs.check-changes.outputs.sgl_kernel == 'true'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           path: sgl-kernel/dist/
           merge-multiple: true
@@ -1175,7 +1175,7 @@ jobs:
 
       - name: Download artifacts
         if: needs.check-changes.outputs.sgl_kernel == 'true'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           path: sgl-kernel/dist/
           merge-multiple: true
@@ -1190,7 +1190,11 @@ jobs:
         timeout-minutes: 30
         run: |
           cd test/
-          IS_BLACKWELL=1 python3 run_suite.py --hw cuda --suite stage-c-test-large-4-gpu-b200
+          CONTINUE_ON_ERROR_FLAG=""
+          if [[ "${{ needs.check-changes.outputs.continue_on_error }}" == "true" ]]; then
+            CONTINUE_ON_ERROR_FLAG="--continue-on-error"
+          fi
+          IS_BLACKWELL=1 python3 run_suite.py --hw cuda --suite stage-c-test-large-4-gpu-b200 $CONTINUE_ON_ERROR_FLAG
 
   multimodal-gen-test-1-gpu:
     needs: [check-changes, call-gate, sgl-kernel-build-wheels]
@@ -1571,7 +1575,7 @@ jobs:
 
       - name: Download artifacts
         if: needs.check-changes.outputs.sgl_kernel == 'true'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           path: sgl-kernel/dist/
           merge-multiple: true
@@ -1671,6 +1675,7 @@ jobs:
         stage-c-test-8-gpu-h200,
         stage-c-test-deepep-4-gpu,
         stage-c-test-deepep-8-gpu-h200,
+        stage-c-test-large-4-gpu-b200,
         stage-c-test-4-gpu-b200,
         stage-c-test-4-gpu-gb200,
       ]
