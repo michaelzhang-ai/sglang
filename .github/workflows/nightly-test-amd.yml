@@ -1,6 +1,9 @@
 name: Nightly Test (AMD)
 
 on:
+  pull_request:
+    branches:
+      - main
   schedule:
     - cron: '0 0 * * *'
   push:
@@ -718,6 +721,30 @@ jobs:
           # Install tabulate for run_suite.py (missing in MI35x container)
           bash scripts/ci/amd/amd_ci_exec.sh pip install tabulate
 
+      - name: Pre-cache DeepSeek-V3.2 model
+        timeout-minutes: 240
+        run: |
+          bash scripts/ci/amd/amd_ci_exec.sh python3 -c "
+          import os, time
+          from huggingface_hub import snapshot_download, scan_cache_dir
+          repo = 'deepseek-ai/DeepSeek-V3.2'
+          cache_dir = os.environ.get('HF_HOME', None)
+          try:
+              info = scan_cache_dir(cache_dir)
+              cached = [r for r in info.repos if r.repo_id == repo]
+              if cached and cached[0].size_on_disk > 400e9:
+                  print(f'Model already cached ({cached[0].size_on_disk/1e9:.1f} GB), skipping download')
+              else:
+                  print(f'Downloading {repo} to {cache_dir}...')
+                  t0 = time.time()
+                  snapshot_download(repo)
+                  print(f'Download completed in {time.time()-t0:.0f}s')
+          except Exception as e:
+              print(f'Cache check failed ({e}), downloading from scratch...')
+              snapshot_download(repo)
+          print('Model ready')
+          "
+
       - name: Accuracy Test MI35x (8-GPU DeepSeek-V3.2)
         timeout-minutes: 120
         run: |
@@ -751,6 +778,30 @@ jobs:
           # Install tabulate for run_suite.py (missing in MI35x container)
           bash scripts/ci/amd/amd_ci_exec.sh pip install tabulate
 
+      - name: Pre-cache DeepSeek-V3.2 model
+        timeout-minutes: 240
+        run: |
+          bash scripts/ci/amd/amd_ci_exec.sh python3 -c "
+          import os, time
+          from huggingface_hub import snapshot_download, scan_cache_dir
+          repo = 'deepseek-ai/DeepSeek-V3.2'
+          cache_dir = os.environ.get('HF_HOME', None)
+          try:
+              info = scan_cache_dir(cache_dir)
+              cached = [r for r in info.repos if r.repo_id == repo]
+              if cached and cached[0].size_on_disk > 400e9:
+                  print(f'Model already cached ({cached[0].size_on_disk/1e9:.1f} GB), skipping download')
+              else:
+                  print(f'Downloading {repo} to {cache_dir}...')
+                  t0 = time.time()
+                  snapshot_download(repo)
+                  print(f'Download completed in {time.time()-t0:.0f}s')
+          except Exception as e:
+              print(f'Cache check failed ({e}), downloading from scratch...')
+              snapshot_download(repo)
+          print('Model ready')
+          "
+
       - name: Accuracy Test MI35x (8-GPU DeepSeek-V3.2 TP+MTP)
         timeout-minutes: 120
         run: |
@@ -783,6 +834,30 @@ jobs:
           bash scripts/ci/amd/amd_ci_install_dependency.sh
           # Install tabulate for run_suite.py (missing in MI35x container)
           bash scripts/ci/amd/amd_ci_exec.sh pip install tabulate
+
+      - name: Pre-cache DeepSeek-V3.2 model
+        timeout-minutes: 240
+        run: |
+          bash scripts/ci/amd/amd_ci_exec.sh python3 -c "
+          import os, time
+          from huggingface_hub import snapshot_download, scan_cache_dir
+          repo = 'deepseek-ai/DeepSeek-V3.2'
+          cache_dir = os.environ.get('HF_HOME', None)
+          try:
+              info = scan_cache_dir(cache_dir)
+              cached = [r for r in info.repos if r.repo_id == repo]
+              if cached and cached[0].size_on_disk > 400e9:
+                  print(f'Model already cached ({cached[0].size_on_disk/1e9:.1f} GB), skipping download')
+              else:
+                  print(f'Downloading {repo} to {cache_dir}...')
+                  t0 = time.time()
+                  snapshot_download(repo)
+                  print(f'Download completed in {time.time()-t0:.0f}s')
+          except Exception as e:
+              print(f'Cache check failed ({e}), downloading from scratch...')
+              snapshot_download(repo)
+          print('Model ready')
+          "
 
       - name: Performance Test MI35x (8-GPU DeepSeek-V3.2 Basic)
         timeout-minutes: 150
@@ -849,6 +924,30 @@ jobs:
           bash scripts/ci/amd/amd_ci_install_dependency.sh
           # Install tabulate for run_suite.py (missing in MI35x container)
           bash scripts/ci/amd/amd_ci_exec.sh pip install tabulate
+
+      - name: Pre-cache DeepSeek-V3.2 model
+        timeout-minutes: 240
+        run: |
+          bash scripts/ci/amd/amd_ci_exec.sh python3 -c "
+          import os, time
+          from huggingface_hub import snapshot_download, scan_cache_dir
+          repo = 'deepseek-ai/DeepSeek-V3.2'
+          cache_dir = os.environ.get('HF_HOME', None)
+          try:
+              info = scan_cache_dir(cache_dir)
+              cached = [r for r in info.repos if r.repo_id == repo]
+              if cached and cached[0].size_on_disk > 400e9:
+                  print(f'Model already cached ({cached[0].size_on_disk/1e9:.1f} GB), skipping download')
+              else:
+                  print(f'Downloading {repo} to {cache_dir}...')
+                  t0 = time.time()
+                  snapshot_download(repo)
+                  print(f'Download completed in {time.time()-t0:.0f}s')
+          except Exception as e:
+              print(f'Cache check failed ({e}), downloading from scratch...')
+              snapshot_download(repo)
+          print('Model ready')
+          "
 
       - name: Performance Test MI35x (8-GPU DeepSeek-V3.2 MTP)
         timeout-minutes: 180
