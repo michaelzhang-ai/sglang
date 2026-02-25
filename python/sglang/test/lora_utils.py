@@ -95,7 +95,6 @@ CI_MULTI_LORA_MODELS = [
                 prefill_tolerance=3e-1,
             ),
         ],
-        rouge_l_tolerance=0.95,
         max_loras_per_batch=2,
         max_loaded_loras=4,
     ),
