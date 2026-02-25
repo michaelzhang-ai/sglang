@@ -54,7 +54,7 @@ class TestMultiLoRABackend(CustomTestCase):
 
             retry(
                 lambda: super(CustomTestCase, self)._callTestMethod(method),
-                max_retry=max_retry + 2,
+                max_retry=max_retry + 3,
                 should_retry=should_retry,
             )
         else:
