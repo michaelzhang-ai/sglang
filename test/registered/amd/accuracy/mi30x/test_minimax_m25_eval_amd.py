@@ -64,7 +64,7 @@ MINIMAX_M25_MODELS = [
     ModelConfig(
         model_path="MiniMaxAI/MiniMax-M2.5",
         tp_size=8,
-        accuracy_threshold=0.80,
+        accuracy_threshold=0.93,
         timeout=3600,
         variant="TP8+EP8",
         other_args=[
