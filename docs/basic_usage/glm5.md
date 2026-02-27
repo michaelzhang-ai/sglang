@@ -62,16 +62,3 @@ python3 -m sglang.launch_server \
 ```{tip}
 To enable the experimental overlap scheduler for EAGLE speculative decoding, set the environment variable `SGLANG_ENABLE_SPEC_V2=1`.
 ```
-
-## Accuracy
-
-GLM-5 achieves strong results on the GSM8K few-shot completion benchmark:
-
-| Platform | TP | Accuracy | Threshold |
-| -------- | -- | -------- | --------- |
-| AMD MI325 | 8 | 96.5% | 93% |
-| AMD MI35x | 8 | 97.0% | 93% |
-
-## Platform-Specific Guides
-
-- For Ascend NPU deployment, see [GLM-5 on Ascend NPU](../platforms/ascend_npu_glm5_examples.md).
