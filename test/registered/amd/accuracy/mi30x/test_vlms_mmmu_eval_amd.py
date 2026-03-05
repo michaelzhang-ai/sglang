@@ -129,6 +129,8 @@ TRITON_ATTENTION_MODELS = {
 AMD_FAILING_VLM_MODELS = {
     # GLM-4.1V processor not registered yet (Glm4vForConditionalGeneration)
     "zai-org/GLM-4.1V-9B-Thinking",
+    "deepseek-ai/deepseek-vl2-small",  # OOM on single GPU TP=1 (exit code -9)
+    "moonshotai/Kimi-VL-A3B-Instruct",  # OOM on single GPU TP=1 (exit code -9)
 }
 
 

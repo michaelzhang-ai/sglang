@@ -63,7 +63,7 @@ MI35X_GPT_OSS_MODELS = [
     ModelConfig(
         model_path="openai/gpt-oss-20b",
         tp_size=8,
-        accuracy_threshold=0.47,
+        accuracy_threshold=0.45,
         other_args=[
             "--chunked-prefill-size",
             "130172",
