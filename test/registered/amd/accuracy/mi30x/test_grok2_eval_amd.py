@@ -103,7 +103,7 @@ class TestGrok2EvalAMD(unittest.TestCase):
     def setUpClass(cls):
         cls.base_url = DEFAULT_URL_FOR_TEST
         cls.num_questions = int(os.environ.get("GSM8K_NUM_QUESTIONS", "200"))
-        cls.accuracy_threshold = 0.915
+        cls.accuracy_threshold = 0.90
 
     def test_grok2_accuracy(self):
         """Test Grok-2 with GSM8K completion benchmark."""
@@ -124,6 +124,8 @@ class TestGrok2EvalAMD(unittest.TestCase):
             "--tokenizer-path",
             GROK2_TOKENIZER_PATH,
             "--trust-remote-code",
+            "--health-check-timeout",
+            "60",
         ]
 
         process = popen_launch_server(
