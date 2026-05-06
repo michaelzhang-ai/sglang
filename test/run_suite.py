@@ -98,6 +98,10 @@ NIGHTLY_SUITES = {
         "nightly-amd-vlm",
         # MI35x 8-GPU suite (different model configs)
         "nightly-amd-8-gpu-mi35x",
+        # Aiter custom all-reduce kernel micro-benchmarks; per-world-size
+        # split so the 2-GPU and 8-GPU runners pick up only the relevant test.
+        "nightly-amd-perf-allreduce-2-gpu",
+        "nightly-amd-perf-allreduce-8-gpu",
     ],
     HWBackend.CPU: [],
     HWBackend.NPU: [

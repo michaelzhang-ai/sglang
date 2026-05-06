@@ -32,6 +32,7 @@ on:
           - nightly-accuracy-2-gpu-vlm-rocm720
           - nightly-perf-2-gpu-text-rocm720
           - nightly-perf-2-gpu-vlm-rocm720
+          - nightly-perf-2-gpu-aiter-allreduce-rocm720
           - nightly-4-gpu-rocm720
           - nightly-accuracy-8-gpu-rocm720
           - nightly-8-gpu-grok1-int4-rocm720
@@ -45,6 +46,7 @@ on:
           - nightly-8-gpu-qwen35-rocm720
           - nightly-8-gpu-glm51-rocm720
           - nightly-8-gpu-minimax-m27-rocm720
+          - nightly-perf-8-gpu-aiter-allreduce-rocm720
           - nightly-1-gpu-zimage-turbo-rocm720
           - nightly-test-1-gpu-mi35x-rocm720
           - nightly-accuracy-8-gpu-mi35x-rocm720
@@ -250,6 +252,40 @@ jobs:
             -e SGLANG_USE_AITER=1 \
             -e GITHUB_STEP_SUMMARY="/sglang-checkout/github_summary.md" \
             python3 run_suite.py --hw amd --suite nightly-amd-perf-vlm-2-gpu --nightly --timeout-per-file 7200 ${{ inputs.continue_on_error && '--continue-on-error' || '' }} || TEST_EXIT_CODE=$?
+          echo "$(<github_summary.md )" >> $GITHUB_STEP_SUMMARY || true
+          exit ${TEST_EXIT_CODE:-0}
+
+  # 2-GPU Aiter Custom AllReduce kernel micro-benchmark (ROCm 7.2)
+  # Detects perf regressions in aiter's CustomAllreduce (ROCm/aiter custom_all_reduce.py)
+  # by exercising benchmark_aiter.py and benchmark_all_reduce.py at TP=2.
+  nightly-perf-2-gpu-aiter-allreduce-rocm720:
+    if: (github.repository == 'sgl-project/sglang' || github.event_name == 'pull_request') && (!(inputs.job_filter || inputs.job_select) || (inputs.job_filter || inputs.job_select) == 'all' || contains(format(',{0},', inputs.job_filter || inputs.job_select), ',nightly-perf-2-gpu-aiter-allreduce-rocm720,'))
+    runs-on: linux-mi325-2gpu-sglang
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Setup docker (ROCm 7.2)
+        run: |
+          touch github_summary.md
+          bash scripts/ci/amd/amd_ci_start_container.sh --rocm-version rocm720
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+
+      - name: Install dependencies
+        run: bash scripts/ci/amd/amd_ci_install_dependency.sh --skip-test-time-deps
+
+      - name: Aiter Custom AllReduce Perf ROCm 7.2 (2-GPU)
+        timeout-minutes: 60
+        run: |
+          > github_summary.md  # Clear summary file
+          bash scripts/ci/amd/amd_ci_exec.sh -w /sglang-checkout/test \
+            -e SGLANG_USE_AITER=1 \
+            -e SGLANG_USE_AITER_AR=1 \
+            -e GITHUB_STEP_SUMMARY="/sglang-checkout/github_summary.md" \
+            python3 run_suite.py --hw amd --suite nightly-amd-perf-allreduce-2-gpu --nightly --timeout-per-file 1800 ${{ inputs.continue_on_error && '--continue-on-error' || '' }} || TEST_EXIT_CODE=$?
           echo "$(<github_summary.md )" >> $GITHUB_STEP_SUMMARY || true
           exit ${TEST_EXIT_CODE:-0}
 
@@ -753,6 +789,40 @@ jobs:
             -e SGLANG_USE_AITER=1 \
             -e GITHUB_STEP_SUMMARY="/sglang-checkout/github_summary.md" \
             python3 run_suite.py --hw amd --suite nightly-perf-8-gpu-minimax-m27 --nightly --timeout-per-file 5400 ${{ inputs.continue_on_error && '--continue-on-error' || '' }} || TEST_EXIT_CODE=$?
+          echo "$(<github_summary.md )" >> $GITHUB_STEP_SUMMARY || true
+          exit ${TEST_EXIT_CODE:-0}
+
+  # 8-GPU Aiter Custom AllReduce kernel micro-benchmark (ROCm 7.2)
+  # Companion to nightly-perf-2-gpu-aiter-allreduce-rocm720; TP=8 is the topology
+  # used by 8x DeepSeek/Grok deployments where aiter regressions hit production.
+  nightly-perf-8-gpu-aiter-allreduce-rocm720:
+    if: (github.repository == 'sgl-project/sglang' || github.event_name == 'pull_request') && (!(inputs.job_filter || inputs.job_select) || (inputs.job_filter || inputs.job_select) == 'all' || contains(format(',{0},', inputs.job_filter || inputs.job_select), ',nightly-perf-8-gpu-aiter-allreduce-rocm720,'))
+    runs-on: linux-mi325-8gpu-sglang
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Setup docker (ROCm 7.2)
+        run: |
+          touch github_summary.md
+          bash scripts/ci/amd/amd_ci_start_container.sh --rocm-version rocm720
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+
+      - name: Install dependencies
+        run: bash scripts/ci/amd/amd_ci_install_dependency.sh --skip-test-time-deps
+
+      - name: Aiter Custom AllReduce Perf ROCm 7.2 (8-GPU)
+        timeout-minutes: 60
+        run: |
+          > github_summary.md  # Clear summary file
+          bash scripts/ci/amd/amd_ci_exec.sh -w /sglang-checkout/test \
+            -e SGLANG_USE_AITER=1 \
+            -e SGLANG_USE_AITER_AR=1 \
+            -e GITHUB_STEP_SUMMARY="/sglang-checkout/github_summary.md" \
+            python3 run_suite.py --hw amd --suite nightly-amd-perf-allreduce-8-gpu --nightly --timeout-per-file 1800 ${{ inputs.continue_on_error && '--continue-on-error' || '' }} || TEST_EXIT_CODE=$?
           echo "$(<github_summary.md )" >> $GITHUB_STEP_SUMMARY || true
           exit ${TEST_EXIT_CODE:-0}
 
@@ -1562,6 +1632,10 @@ jobs:
       # MI30x ROCm 7.2 Performance Tests
       - nightly-perf-2-gpu-text-rocm720
       - nightly-perf-2-gpu-vlm-rocm720
+      # MI30x ROCm 7.2 Aiter AllReduce kernel perf - excluded from check
+      # (no built-in perf threshold; track via GitHub Step Summary)
+      # - nightly-perf-2-gpu-aiter-allreduce-rocm720
+      # - nightly-perf-8-gpu-aiter-allreduce-rocm720
       # MI30x ROCm 7.2 4-GPU Tests
       - nightly-4-gpu-rocm720
       - nightly-accuracy-8-gpu-rocm720
