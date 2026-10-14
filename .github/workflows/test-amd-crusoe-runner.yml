@@ -1,0 +1,72 @@
+name: Test AMD Crusoe Runner
+
+# Smoke test for the Crusoe MI355X self-hosted runners (label
+# linux-mi35x-gpu-8.crusoe). The first job checks the runner environment that
+# scripts/ci/amd/* rely on; the second runs the stage-a 1-GPU small suite
+# through the stock container flow.
+#
+# Runs only on PRs labeled run-crusoe-ci whose head branch lives in this
+# repository, so pull requests from other forks never reach the self-hosted
+# runner.
+on:
+  pull_request:
+    types: [labeled, synchronize]
+
+concurrency:
+  group: test-amd-crusoe-runner-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SGLANG_IS_IN_CI: true
+
+jobs:
+  runner-env:
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'run-crusoe-ci') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: linux-mi35x-gpu-8.crusoe
+    timeout-minutes: 15
+    steps:
+      - name: Check runner environment
+        run: |
+          echo "CI hostname: $(hostname)"
+          echo "Crusoe node: ${CRUSOE_NODE:-unknown}"
+          # amd_ci_start_container.sh / amd_ci_exec.sh / amd_ci_install_dependency.sh
+          # pick the GPU arch, and so the image, from this hostname pattern.
+          if [[ "$(hostname)" =~ ^linux-(mi[0-9]+[a-z]*)-gpu-[0-9]+ ]] && [[ "${BASH_REMATCH[1]}" == mi35x ]]; then
+            echo "CI scripts will detect arch: mi35x"
+          else
+            echo "::error::hostname '$(hostname)' does not map to mi35x; the runner's hostname shim is not active"
+            exit 1
+          fi
+          rocm-smi --showproductname | grep 'Card Series'
+          docker info --format 'docker {{.ServerVersion}}, root {{.DockerRootDir}}'
+          df -h "$GITHUB_WORKSPACE"
+
+  stage-a-test-1-gpu-small-crusoe:
+    needs: runner-env
+    runs-on: linux-mi35x-gpu-8.crusoe
+    timeout-minutes: 90
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Ensure VRAM is clear
+        run: bash scripts/ci/amd/ensure_vram_clear.sh rocm
+
+      - name: Start CI container
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --rocm-version rocm10
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+
+      - name: Install dependencies
+        run: bash scripts/ci/amd/amd_ci_install_dependency.sh
+
+      - name: Run test
+        timeout-minutes: 30
+        run: |
+          bash scripts/ci/amd/amd_ci_exec.sh -w "/sglang-checkout/test" python3 run_suite.py --hw amd --suite stage-a-test-1-gpu-small-amd
+
+      - name: Stop CI container
+        if: always()
+        run: docker rm -f ci_sglang || true
